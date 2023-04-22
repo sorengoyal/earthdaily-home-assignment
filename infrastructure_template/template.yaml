@@ -85,6 +85,21 @@ Resources:
       Handler: post.handler
       Runtime: python3.9
 
+  AtmDB:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        -
+          AttributeName: "id"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "id"
+          KeyType: "HASH"
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+
+
 Outputs:
   Endpoint:
     Value: !Sub "https://${Api}.execute-api.${AWS::Region}.amazonaws.com/Prod/"

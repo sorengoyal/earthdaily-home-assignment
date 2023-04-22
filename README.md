@@ -6,7 +6,7 @@ aws cloudformation package \
 --s3-bucket earthdaily-deployments-pdx
 ```
 
-```commandline
+```bash
 aws cloudformation deploy \
 --template-file packaged.template \
 --stack-name EarthdailyAtmStack \
