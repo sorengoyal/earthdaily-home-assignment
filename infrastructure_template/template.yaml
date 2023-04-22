@@ -1,0 +1,90 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Transform: "AWS::Serverless-2016-10-31"
+
+Resources:
+  Api:
+    Type: "AWS::Serverless::Api"
+    Properties:
+      BinaryMediaTypes:
+        - "*~1*"
+      DefinitionBody:
+        info:
+          title: !Ref "AWS::StackName"
+          version: "1.0"
+        openapi: "3.0"
+        paths:
+          /atm/{atm_id}/:
+           get:
+              description: Obtain informationa about the ATMs
+              parameters:
+                - name: atm_id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+              responses:
+                {}
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetFunction.Arn}/invocations"
+          /atm/:
+            post:
+              description: Create a new ATM entry
+              requestBody:
+                required: true
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      required:
+                        - address
+                        - provider
+                      properties:
+                        address:
+                          type: string
+                        provider:
+                          type: string
+                        rating:
+                          type: float
+              responses:
+                '200':
+                  description: Successfully created an entry for ATM
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${PostFunction.Arn}/invocations"
+      StageName: Prod
+
+  GetFunction:
+    Type: "AWS::Serverless::Function"
+    Properties:
+      CodeUri: function/get.py
+      Events:
+        Base:
+          Type: Api
+          Properties:
+            Method: any
+            Path: /atm/{atm_id}/
+            RestApiId: !Ref Api
+      Handler: get.handler
+      Runtime: python3.9
+
+  PostFunction:
+    Type: "AWS::Serverless::Function"
+    Properties:
+      CodeUri: function/post.py
+      Events:
+        Base:
+          Type: Api
+          Properties:
+            Method: any
+            Path: /atm/
+            RestApiId: !Ref Api
+      Handler: post.handler
+      Runtime: python3.9
+
+Outputs:
+  Endpoint:
+    Value: !Sub "https://${Api}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
