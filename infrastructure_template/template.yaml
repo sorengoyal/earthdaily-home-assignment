@@ -57,6 +57,39 @@ Resources:
                 uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${PostFunction.Arn}/invocations"
       StageName: Prod
 
+  AccessDdbPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: AccessDdBPolicy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - "dynamodb:DeleteItem"
+              - "dynamodb:GetItem"
+              - "dynamodb:PutItem"
+              - "dynamodb:Scan"
+              - "dynamodb:UpdateItem"
+            Resource: "*"
+      Roles:
+        - !Ref GetFunctionExecutionRole
+        - !Ref PostFunctionExecutionRole
+
+  GetFunctionExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
   GetFunction:
     Type: "AWS::Serverless::Function"
     Properties:
@@ -70,6 +103,21 @@ Resources:
             RestApiId: !Ref Api
       Handler: get.handler
       Runtime: python3.9
+      Role: !GetAtt GetFunctionExecutionRole.Arn
+
+  PostFunctionExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
 
   PostFunction:
     Type: "AWS::Serverless::Function"
@@ -84,6 +132,7 @@ Resources:
             RestApiId: !Ref Api
       Handler: post.handler
       Runtime: python3.9
+      Role: !GetAtt GetFunctionExecutionRole.Arn
 
   AtmDB:
     Type: AWS::DynamoDB::Table
