@@ -41,5 +41,18 @@ class TestAtmService(unittest.TestCase):
         self.assertIsNone(error)
         self.assertTrue(atm, result)
 
+    def test_update_successful(self):
+        # Arrange
+        created_on = datetime.strptime(self.CREATED_ON_STR, "%Y-%m-%d %H:%M:%S.%f")
+        atm = AtmModel(UUID(self.UUID_STR), self.ADDRESS, self.PROVIDER, float(self.RATING_STR), created_on)
+        self.mock_atm_repository.update = MagicMock(return_value=atm)
+        parameters = {}
+        # Act
+        result, error = self.class_under_test.update(UUID(self.UUID_STR), parameters)
+
+        # Assert
+        self.assertIsNone(error)
+        self.assertTrue(atm, result)
+
 
 

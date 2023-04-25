@@ -84,3 +84,45 @@ class TestAtmRepository(unittest.TestCase):
         self.assertEqual(self.ADDRESS, result.address)
         self.assertEqual(self.RATING_STR, str(result.rating))
         self.assertEqual(self.CREATED_ON_STR, str(result.created_on))
+
+    def test_update_successful(self):
+        # Arrange
+        response = {
+            "Attributes": {
+                "id": {"S": self.UUID_STR},
+                "provider": {"S": self.PROVIDER + "_updated"},
+                "address": {"S": self.ADDRESS + "_updated"},
+                "rating": {"N": self.RATING_STR + "99"},
+                "created_on": {"S": self.CREATED_ON_STR}
+            },
+            "ResponseMetadata": {
+                "RequestId": "EUHH1L60IFNGI7SGD7D4ERRGIBVV4KQNSO5AEMVJF66Q9ASUAAJG",
+                "HTTPStatusCode": 200,
+                "HTTPHeaders": {
+                    "server": "Server",
+                    "date": "Tue, 25 Apr 2023 05:01:37 GMT",
+                    "content-type": "application/x-amz-json-1.0",
+                    "content-length": "102",
+                    "connection": "keep-alive",
+                    "x-amzn-requestid": "EUHH1L60IFNGI7SGD7D4ERRGIBVV4KQNSO5AEMVJF66Q9ASUAAJG",
+                    "x-amz-crc32": "3977540516"
+                },
+                "RetryAttempts": 0
+            }
+        }
+        self.mock_ddb_client.update_item = MagicMock(return_value=response)
+        parameters = {
+            AtmModel.FIELD_ADDRESS: self.ADDRESS,
+            AtmModel.FIELD_PROVIDER: self.PROVIDER,
+            AtmModel.FIELD_RATING: self.RATING_STR,
+        }
+
+        # Act
+        result = self.class_under_test.update(UUID(self.UUID_STR), parameters)
+
+        # Assert
+        self.assertEqual(self.UUID_STR, str(result.id))
+        self.assertEqual(self.PROVIDER+"_updated", result.provider)
+        self.assertEqual(self.ADDRESS+"_updated", result.address)
+        self.assertEqual(self.RATING_STR+"99", str(result.rating))
+        self.assertEqual(self.CREATED_ON_STR, str(result.created_on))

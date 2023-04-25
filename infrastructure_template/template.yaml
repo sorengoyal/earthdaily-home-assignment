@@ -55,6 +55,29 @@ Resources:
                 httpMethod: POST
                 type: aws_proxy
                 uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AtmFunction.Arn}/invocations"
+          /atm/{atm_id}:
+            put:
+              description: Update an existing ATM entry
+              requestBody:
+                required: true
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      properties:
+                        address:
+                          type: string
+                        provider:
+                          type: string
+                        rating:
+                          type: float
+              responses:
+                '200':
+                  description: Successfully updated the ATM entry
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AtmFunction.Arn}/invocations"
       StageName: Prod
 
   AccessDdbPolicy:
@@ -104,6 +127,12 @@ Resources:
           Type: Api
           Properties:
             Method: get
+            Path: /atm/*
+            RestApiId: !Ref Api
+        PUT:
+          Type: Api
+          Properties:
+            Method: put
             Path: /atm/*
             RestApiId: !Ref Api
       Handler: atm_function.handler

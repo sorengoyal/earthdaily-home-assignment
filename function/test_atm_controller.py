@@ -38,6 +38,7 @@ class TestAtmController(unittest.TestCase):
     def test_post_200(self):
         # Arrange
         '''
+        ASCII representation of the base64 encoded body
         {
             "address": "3588 Crowley Dr",
             "provider": "TD",
@@ -54,6 +55,32 @@ class TestAtmController(unittest.TestCase):
 
         # Act
         result = self.class_under_test.post(event, None)
+
+        # Assert
+        self.assertEqual(expected_response, result)
+
+    def test_put_200(self):
+        # Arrange
+        '''
+        ASCII representation of the base64 encoded body
+        {
+            "address": "3588 Crowley Dr",
+            "provider": "TD",
+            "rating": 5.0
+        }
+        '''
+        event = {
+            "body": "ewogICAgImFkZHJlc3MiOiAiMzU4OCBDcm93bGV5IERyIiwKICAgICJwcm92aWRlciI6ICJURCIsCiAgICAicmF0aW5nIjogNS4wCn0=",
+            "pathParameters": {"atm_id": self.UUID_STR}
+
+        }
+        created_on = datetime.strptime(self.CREATED_ON_STR, "%Y-%m-%d %H:%M:%S.%f")
+        atm = AtmModel(UUID(self.UUID_STR), self.ADDRESS, self.PROVIDER, float(self.RATING_STR), created_on)
+        expected_response = self.class_under_test.responseSuccess(200, atm)
+        self.mock_atm_service.update = MagicMock(return_value=(atm, None))
+
+        # Act
+        result = self.class_under_test.put(event, None)
 
         # Assert
         self.assertEqual(expected_response, result)
