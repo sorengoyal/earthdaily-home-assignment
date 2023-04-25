@@ -14,7 +14,10 @@
           "200" : {
             "description" : "200 response"
           }
-        }
+        },
+        "security" : [ {
+          "api_key" : [ ]
+        } ]
       }
     },
     "/atm/{atm_id}" : {
@@ -25,7 +28,10 @@
           "required" : true,
           "type" : "string"
         } ],
-        "responses" : { }
+        "responses" : { },
+        "security" : [ {
+          "api_key" : [ ]
+        } ]
       },
       "put" : {
         "parameters" : [ {
@@ -38,8 +44,18 @@
           "200" : {
             "description" : "200 response"
           }
-        }
+        },
+        "security" : [ {
+          "api_key" : [ ]
+        } ]
       }
+    }
+  },
+  "securityDefinitions" : {
+    "api_key" : {
+      "type" : "apiKey",
+      "name" : "x-api-key",
+      "in" : "header"
     }
   }
 }

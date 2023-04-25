@@ -7,6 +7,8 @@ Resources:
   Api:
     Type: "AWS::Serverless::Api"
     Properties:
+      Auth:
+        ApiKeyRequired: true
       BinaryMediaTypes:
         - "*~1*"
       DefinitionBody:
