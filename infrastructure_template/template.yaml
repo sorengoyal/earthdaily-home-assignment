@@ -16,7 +16,7 @@ Resources:
         paths:
           /atm/{atm_id}/:
            get:
-              description: Obtain informationa about the ATMs
+              description: Obtain information about the ATMs
               parameters:
                 - name: atm_id
                   in: path
@@ -28,7 +28,7 @@ Resources:
               x-amazon-apigateway-integration:
                 httpMethod: POST
                 type: aws_proxy
-                uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetFunction.Arn}/invocations"
+                uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AtmFunction.Arn}/invocations"
           /atm/:
             post:
               description: Create a new ATM entry
@@ -54,7 +54,7 @@ Resources:
               x-amazon-apigateway-integration:
                 httpMethod: POST
                 type: aws_proxy
-                uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${PostFunction.Arn}/invocations"
+                uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AtmFunction.Arn}/invocations"
       StageName: Prod
 
   AccessDdbPolicy:
@@ -73,10 +73,9 @@ Resources:
               - "dynamodb:UpdateItem"
             Resource: "*"
       Roles:
-        - !Ref GetFunctionExecutionRole
-        - !Ref PostFunctionExecutionRole
+        - !Ref AtmFunctionExecutionRole
 
-  GetFunctionExecutionRole:
+  AtmFunctionExecutionRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -90,49 +89,26 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
 
-  GetFunction:
+  AtmFunction:
     Type: "AWS::Serverless::Function"
     Properties:
-      CodeUri: function/get.py
+      CodeUri: function/atm_function.py
       Events:
-        Base:
+        POST:
           Type: Api
           Properties:
-            Method: any
-            Path: /atm/{atm_id}/
+            Method: post
+            Path: /atm
             RestApiId: !Ref Api
-      Handler: get.handler
-      Runtime: python3.9
-      Role: !GetAtt GetFunctionExecutionRole.Arn
-
-  PostFunctionExecutionRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - lambda.amazonaws.com
-            Action: sts:AssumeRole
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-
-  PostFunction:
-    Type: "AWS::Serverless::Function"
-    Properties:
-      CodeUri: function/post.py
-      Events:
-        Base:
+        GET:
           Type: Api
           Properties:
-            Method: any
-            Path: /atm/
+            Method: get
+            Path: /atm/*
             RestApiId: !Ref Api
-      Handler: post.handler
+      Handler: atm_function.handler
       Runtime: python3.9
-      Role: !GetAtt GetFunctionExecutionRole.Arn
+      Role: !GetAtt AtmFunctionExecutionRole.Arn
 
   AtmDB:
     Type: AWS::DynamoDB::Table
