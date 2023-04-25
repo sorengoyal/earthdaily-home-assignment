@@ -87,7 +87,30 @@ class TestAtmRepository(unittest.TestCase):
 
     def test_update_successful(self):
         # Arrange
-        response = {
+        get_response = {
+            "Item": {
+                "id": {"S": self.UUID_STR},
+                "provider": {"S": self.PROVIDER},
+                "address": {"S": self.ADDRESS},
+                "rating": {"N": self.RATING_STR},
+                "created_on": {"S": self.CREATED_ON_STR}
+            },
+            "ResponseMetadata": {
+                "RequestId": "EUHH1L60IFNGI7SGD7D4ERRGIBVV4KQNSO5AEMVJF66Q9ASUAAJG",
+                "HTTPStatusCode": 200,
+                "HTTPHeaders": {
+                    "server": "Server",
+                    "date": "Tue, 25 Apr 2023 05:01:37 GMT",
+                    "content-type": "application/x-amz-json-1.0",
+                    "content-length": "102",
+                    "connection": "keep-alive",
+                    "x-amzn-requestid": "EUHH1L60IFNGI7SGD7D4ERRGIBVV4KQNSO5AEMVJF66Q9ASUAAJG",
+                    "x-amz-crc32": "3977540516"
+                },
+                "RetryAttempts": 0
+            }
+        }
+        put_response = {
             "Attributes": {
                 "id": {"S": self.UUID_STR},
                 "provider": {"S": self.PROVIDER + "_updated"},
@@ -110,7 +133,8 @@ class TestAtmRepository(unittest.TestCase):
                 "RetryAttempts": 0
             }
         }
-        self.mock_ddb_client.update_item = MagicMock(return_value=response)
+        self.mock_ddb_client.get_item = MagicMock(return_value=get_response)
+        self.mock_ddb_client.update_item = MagicMock(return_value=put_response)
         parameters = {
             AtmModel.FIELD_ADDRESS: self.ADDRESS,
             AtmModel.FIELD_PROVIDER: self.PROVIDER,
@@ -118,7 +142,7 @@ class TestAtmRepository(unittest.TestCase):
         }
 
         # Act
-        result = self.class_under_test.update(UUID(self.UUID_STR), parameters)
+        result, error = self.class_under_test.update(UUID(self.UUID_STR), parameters)
 
         # Assert
         self.assertEqual(self.UUID_STR, str(result.id))

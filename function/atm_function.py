@@ -73,13 +73,20 @@ class AtmRepository:
     def read(self, id: UUID) -> AtmModel:
         response = self._dynamo_client.get_item(TableName=self.TABLE_NAME,
                                                 Key=self._create_key(str(id)))
+        print(response)
         if "Item" not in response:
             return None
         return AtmModel.from_ddb_item(response["Item"])
 
 
-    def update(self, id, parameters):
+    def update(self, id, parameters) -> (AtmModel, Error):
         key = self._create_key(id)
+        response = self._dynamo_client.get_item(TableName=self.TABLE_NAME,
+                                                Key=self._create_key(str(id)))
+        print(response)
+        if "Item" not in response:
+            return None, Error(404, "Item not found")
+
         attribute_updates = {}
         if AtmModel.FIELD_ADDRESS in parameters:
             address = parameters[AtmModel.FIELD_ADDRESS]
@@ -96,11 +103,10 @@ class AtmRepository:
                                                    AttributeUpdates=attribute_updates,
                                                    ReturnValues='ALL_NEW')
 
-        print(response)
         if response['ResponseMetadata']['HTTPStatusCode'] >= 300:
             print(response)
-            return None
-        return AtmModel.from_ddb_item(response["Attributes"])
+            return None, Error(500, "The database faield to write")
+        return AtmModel.from_ddb_item(response["Attributes"]), None
 
     def delete(self, id: str):
         pass
@@ -132,9 +138,11 @@ class AtmService:
         return atm, None
 
     def update(self, id: UUID, parameters: Dict) -> (AtmModel, Error):
-        atm = self._atm_repository.update(id, parameters)
-        if atm == None:
-            return None, Error(500, "Unable to update the item: %d" % (id))
+        atm, error = self._atm_repository.update(id, parameters)
+        if error and error.code == 404:
+            return None, error
+        elif atm == None:
+            return None, Error(500, "Unable to update the item: %s" % (id))
         return atm, None
 
     def __init__(self, atm_repository: AtmRepository):
@@ -146,7 +154,7 @@ class AtmController:
         id = event['pathParameters']['atm_id']
         atm, error = self._atm_service.getById(id)
         if error:
-            return self.responseError(400, "No Item exists for id: %d" % (id))
+            return self.responseError(400, "No Item exists for id: %s" % (id))
         return self.responseSuccess(200, atm)
 
     def post(self, event, context):

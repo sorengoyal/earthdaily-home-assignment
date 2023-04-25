@@ -3,6 +3,7 @@ AWSTemplateFormatVersion: "2010-09-09"
 Transform: "AWS::Serverless-2016-10-31"
 
 Resources:
+  # TODO: Add an authZ or authN mechanism to secure the api endpoint
   Api:
     Type: "AWS::Serverless::Api"
     Properties:

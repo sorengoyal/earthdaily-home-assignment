@@ -1,0 +1,45 @@
+{
+  "swagger" : "2.0",
+  "info" : {
+    "version" : "1.0",
+    "title" : "EarthdailyAtmStack"
+  },
+  "host" : "utkynsmhz0.execute-api.us-west-2.amazonaws.com",
+  "basePath" : "/Prod",
+  "schemes" : [ "https" ],
+  "paths" : {
+    "/atm" : {
+      "post" : {
+        "responses" : {
+          "200" : {
+            "description" : "200 response"
+          }
+        }
+      }
+    },
+    "/atm/{atm_id}" : {
+      "get" : {
+        "parameters" : [ {
+          "name" : "atm_id",
+          "in" : "path",
+          "required" : true,
+          "type" : "string"
+        } ],
+        "responses" : { }
+      },
+      "put" : {
+        "parameters" : [ {
+          "name" : "atm_id",
+          "in" : "path",
+          "required" : true,
+          "type" : "string"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "200 response"
+          }
+        }
+      }
+    }
+  }
+}
