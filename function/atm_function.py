@@ -57,7 +57,6 @@ class AtmRepository:
     TABLE_NAME = 'EarthdailyAtmStack-AtmDB-ZY0LE9NKVG3H'
 
     def create(self, atm: AtmModel) -> AtmModel:
-        print("In AtmRepository Create")
         atm.id = uuid4()
         atm.created_on = datetime.now()
         response = self._dynamo_client.put_item(
@@ -73,17 +72,16 @@ class AtmRepository:
     def read(self, id: UUID) -> AtmModel:
         response = self._dynamo_client.get_item(TableName=self.TABLE_NAME,
                                                 Key=self._create_key(str(id)))
-        print(response)
+        print("Response from DynamoDB\n" + response)
         if "Item" not in response:
             return None
         return AtmModel.from_ddb_item(response["Item"])
-
 
     def update(self, id, parameters) -> (AtmModel, Error):
         key = self._create_key(id)
         response = self._dynamo_client.get_item(TableName=self.TABLE_NAME,
                                                 Key=self._create_key(str(id)))
-        print(response)
+        print("Item is present in DB\n" + response)
         if "Item" not in response:
             return None, Error(404, "Item not found")
 
@@ -104,7 +102,7 @@ class AtmRepository:
                                                    ReturnValues='ALL_NEW')
 
         if response['ResponseMetadata']['HTTPStatusCode'] >= 300:
-            print(response)
+            print("Response from DynamoDB\n" + response)
             return None, Error(500, "The database faield to write")
         return AtmModel.from_ddb_item(response["Attributes"]), None
 
@@ -119,16 +117,16 @@ class AtmRepository:
         }
 
     def __init__(self, ddb_client):
+        if ddb_client == None:
+            raise Exception("ddb_client cannot None")
         self._dynamo_client = ddb_client
 
 class AtmService:
     def create(self, address: str, provider: str, rating: float) -> (AtmModel, Error):
-        print("In AtmService Create")
         atm = AtmModel(None, address, provider, rating, None)
         atm_with_id = self._atm_repository.create(atm)
         if atm_with_id == None:
             return None, Error(500, "Unable to create item")
-        print(atm_with_id)
         return atm_with_id, None
 
     def getById(self, id: UUID) -> (AtmModel, Error):
@@ -203,15 +201,15 @@ class AtmController:
 
 def handler(event, context):
     # Intialization:
-    # TODO: Offload to a DI framework
+    # Optimization: Offload to a DI framework
     ddb_client = boto3.client('dynamodb')
     atm_repository = AtmRepository(ddb_client)
     atm_service = AtmService(atm_repository)
     atm_controller = AtmController(atm_service)
 
-    # TODO: Look up MVC frameworks for python to handle http calls
+    # Optimization: Look up MVC frameworks for python to handle http calls
     operation = event['httpMethod']
-    print(event)
+    print("Received request:" + event)
     response = None
     if operation == 'GET':
         response = atm_controller.get(event, context)
